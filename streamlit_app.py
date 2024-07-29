@@ -34,7 +34,6 @@ if pending_tasks:
     durum_container.warning(f"🔴 {len(pending_tasks)} kadar tamamlanmamış görevleriniz var.")
 else:
     durum_container.success("✅ Tamamlanmamış görevleriniz yok.")
-    st.experimental_rerun()
 
 # Sayfa Başlığı
 st.image("ceri.png")
@@ -50,14 +49,13 @@ def mark_task_completed(task_id):
     with open(tasks_file, "w") as f:
         json.dump(tasks, f)
     st.balloons()
-    st.experimental_rerun()
 
 def delete_task(task_id):
     global tasks
     tasks = [task for task in tasks if task["id"] != task_id]
     with open(tasks_file, "w") as f:
         json.dump(tasks, f)
-    st.experimental_rerun()
+    st.balloons()
 
 if option == "Rapor":
     st.markdown("<h5 style='text-align: center;'>Görev Durumu</h5>", unsafe_allow_html=True)
@@ -102,7 +100,6 @@ else:
             with open(tasks_file, "w") as f:
                 json.dump(tasks, f)
             st.success("Görev başarıyla eklendi.")
-            st.experimental_rerun()
 
 completed_tasks = [task for task in tasks if task["completed"]]
 not_completed_tasks = [task for task in tasks if not task["completed"]]
