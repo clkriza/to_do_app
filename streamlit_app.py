@@ -4,9 +4,10 @@ import streamlit as st
 import os
 import json
 import uuid
+from streamlit_autorefresh import st_autorefresh
+
 
 # Türkiye Saat Dilimi
-turkey_tz = 'Europe/Istanbul'
 now = datetime.datetime.now(datetime.timezone.utc).astimezone(datetime.timezone(datetime.timedelta(hours=3)))
 
 # Günün Tarih ve Saati
@@ -51,14 +52,12 @@ def mark_task_completed(task_id):
     with open(tasks_file, "w") as f:
         json.dump(tasks, f)
     st.balloons()
-    st.experimental_rerun()
 
 def delete_task(task_id):
     global tasks
     tasks = [task for task in tasks if task["id"] != task_id]
     with open(tasks_file, "w") as f:
         json.dump(tasks, f)
-    st.experimental_rerun()
 
 if option == "Rapor":
     st.markdown("<h5 style='text-align: center;'>Görev Durumu</h5>", unsafe_allow_html=True)
@@ -107,8 +106,6 @@ else:
             tasks.append(task)
             with open(tasks_file, "w") as f:
                 json.dump(tasks, f)
-            
-            st.experimental_rerun()
 
 # CSS ile Daha İyi UI
 st.markdown(
