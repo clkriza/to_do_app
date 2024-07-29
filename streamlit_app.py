@@ -24,6 +24,29 @@ if not os.path.exists(tasks_file):
 with open(tasks_file, "r") as f:
     tasks = json.load(f)
 
+# Görev Tamamlanmış Olarak İşaretle
+def mark_task_completed(task_id):
+    global tasks
+    for task in tasks:
+        if task["id"] == task_id:
+            if not task["completed"]:  # Sadece tamamlanmamış görevler tamamlanmış olarak işaretlenir
+                task["completed"] = True
+                with open(tasks_file, "w") as f:
+                    json.dump(tasks, f)
+                st.session_state.updated = True  # Durumu güncel olarak işaretle
+
+# Görev Sil
+def delete_task(task_id):
+    global tasks
+    tasks = [task for task in tasks if task["id"] != task_id]
+    with open(tasks_file, "w") as f:
+        json.dump(tasks, f)
+    st.session_state.updated = True  # Durumu güncel olarak işaretle
+
+# Sayfa Durumu
+if 'updated' not in st.session_state:
+    st.session_state.updated = False
+
 # Raporu Oluştur
 completed_tasks = [task for task in tasks if task["completed"]]
 pending_tasks = [task for task in tasks if not task["completed"]]
@@ -40,24 +63,6 @@ st.image("ceri.png")
 
 # Seçim Kutusu
 option = st.selectbox("Seçenekler", ["Görevler", "Rapor"])
-
-def mark_task_completed(task_id):
-    global tasks
-    for task in tasks:
-        if task["id"] == task_id:
-            if not task["completed"]:  # Sadece tamamlanmamış görevler tamamlanmış olarak işaretlenir
-                task["completed"] = True
-                with open(tasks_file, "w") as f:
-                    json.dump(tasks, f)
-                st.balloons()
-                break  # Güncellemeden sonra döngüden çık
-
-def delete_task(task_id):
-    global tasks
-    tasks = [task for task in tasks if task["id"] != task_id]
-    with open(tasks_file, "w") as f:
-        json.dump(tasks, f)
-    st.balloons()
 
 if option == "Rapor":
     st.markdown("<h5 style='text-align: center;'>Görev Durumu</h5>", unsafe_allow_html=True)
@@ -102,6 +107,11 @@ else:
             with open(tasks_file, "w") as f:
                 json.dump(tasks, f)
             st.success("Görev başarıyla eklendi.")
+            st.session_state.updated = True  # Durumu güncel olarak işaretle
+
+if st.session_state.updated:
+    st.session_state.updated = False
+    st.experimental_rerun()  # Durum güncellendiğinde sayfayı yenile
 
 completed_tasks = [task for task in tasks if task["completed"]]
 not_completed_tasks = [task for task in tasks if not task["completed"]]
