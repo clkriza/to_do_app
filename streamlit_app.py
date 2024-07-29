@@ -1,27 +1,17 @@
-import asyncio
 import datetime
-import time
 import pandas as pd
 import streamlit as st
 import os
 import json
 import uuid
-import requests
-from streamlit_autorefresh import st_autorefresh
-
-
-
-
 
 # Türkiye Saat Dilimi
 turkey_tz = 'Europe/Istanbul'
+now = datetime.datetime.now(datetime.timezone.utc).astimezone(datetime.timezone(datetime.timedelta(hours=3)))
 
-saat = st.container(border=True)
 # Günün Tarih ve Saati
-now = datetime.datetime.now(datetime.timezone.utc).astimezone(datetime.timezone(datetime.timedelta(hours=int(time.timezone/3600))))
-
+saat = st.container()
 saat.text(f"🕘 {now.strftime('%d-%m-%Y')} / {now.strftime('%H:%M:%S')}")
-
 
 # Dosya Yolu
 tasks_file = "tasks.json"
@@ -46,8 +36,6 @@ if pending_tasks:
     durum_container.warning(f"🔴 {len(pending_tasks)} kadar tamamlanmamış görevleriniz var. !")
 else:
     durum_container.success("✅ Tamamlanmamış görevleriniz yok.")
-    time.sleep(1)  # 1 saniye bekle
-    durum_container.empty()  # Container'ı temizle      
 
 # Sayfa Başlığı
 st.image("ceri.png")
@@ -88,7 +76,6 @@ if option == "Rapor":
             if st.button("Sil", key=f"del-{task['id']}"):
                 delete_task(task["id"])
 
-
     # Bekleyen Görevler Listesi
     st.markdown("#### 🕘 Bekleyen Görevler")
     for task in pending_tasks:
@@ -123,30 +110,6 @@ else:
             
             st.experimental_rerun()
 
-completed_tasks = [task for task in tasks if task["completed"]]
-not_completed_tasks = [task for task in tasks if not task["completed"]]
-
-df_completed = pd.DataFrame(completed_tasks)
-df_not_completed = pd.DataFrame(not_completed_tasks)        
-
-if tasks:
-    st.markdown("### Görevler")
-    with st.expander("📋 Görev Listesi"):
-        for task in tasks:
-            if task["completed"]:
-                st.markdown(f"<div style='border-radius: 8px; padding: 10px; margin: 5px; background-color: #d4edda; border-left: 5px solid #28a745;'><strong>📣{task['task']}</strong> (Tamamlandı)<br>{task['description']}<br>{task['date']}</div>", unsafe_allow_html=True)
-                
-            else:
-                col1, col2 = st.columns([4, 1])
-                with col1:
-                    st.markdown(f"<div style='border-radius: 8px; padding: 10px; margin: 5px; background-color: #f8d7da; border-left: 5px solid #dc3545;'>❗{task['task']}<br>{task['description']}<br>{task['date']}</div>", unsafe_allow_html=True)
-                with col2:
-                    if st.button("✅Tamamla", key=task["id"]):
-                        mark_task_completed(task["id"])
-                        
-else:
-    st.info("Henüz hiç bir plan eklenmemiş.")
-
 # CSS ile Daha İyi UI
 st.markdown(
     """
@@ -171,7 +134,7 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-seç = st.container(border=True) 
+seç = st.container() 
 with seç:
     # Seçim kutusunu oluştur
     seçim = st.selectbox("📚 Bir Hikaye Seç", ["Seçimin;", "🔞 Rıza'nın Hikayesi", "🔪 Ceri'nin Hikayesi"])
