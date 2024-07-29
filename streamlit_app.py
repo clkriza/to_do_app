@@ -9,7 +9,6 @@ import uuid
 import requests
 from streamlit_autorefresh import st_autorefresh
 
-
 # Türkiye Saat Dilimi
 turkey_tz = 'Europe/Istanbul'
 
@@ -18,7 +17,6 @@ saat = st.container(border=True)
 now = datetime.datetime.now(datetime.timezone.utc).astimezone(datetime.timezone(datetime.timedelta(hours=int(time.timezone/3600))))
 
 saat.text(f"🕘 {now.strftime('%d-%m-%Y')} / {now.strftime('%H:%M:%S')}")
-
 
 # Dosya Yolu
 tasks_file = "tasks.json"
@@ -60,14 +58,14 @@ def mark_task_completed(task_id):
     with open(tasks_file, "w") as f:
         json.dump(tasks, f)
     st.balloons()
-    st.experimental_rerun()
+    st.experimental_rerun()  # Sayfayı yeniden yükler
 
 def delete_task(task_id):
     global tasks
     tasks = [task for task in tasks if task["id"] != task_id]
     with open(tasks_file, "w") as f:
         json.dump(tasks, f)
-    st.experimental_rerun()
+    st.experimental_rerun()  # Sayfayı yeniden yükler
 
 if option == "Rapor":
     st.markdown("<h5 style='text-align: center;'>Görev Durumu</h5>", unsafe_allow_html=True)
@@ -84,7 +82,6 @@ if option == "Rapor":
         with col2:
             if st.button("Sil", key=f"del-{task['id']}"):
                 delete_task(task["id"])
-
 
     # Bekleyen Görevler Listesi
     st.markdown("#### 🕘 Bekleyen Görevler")
@@ -118,7 +115,7 @@ else:
             with open(tasks_file, "w") as f:
                 json.dump(tasks, f)
             
-            st.experimental_rerun()
+            st.experimental_rerun()  # Sayfayı yeniden yükler
 
 completed_tasks = [task for task in tasks if task["completed"]]
 not_completed_tasks = [task for task in tasks if not task["completed"]]
