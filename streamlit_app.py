@@ -42,7 +42,7 @@ else:
     durum_container.empty()  # Container'ı temizle      
 
 # Sayfa Başlığı
-st.image("C:\\Users\\rizacelik\\Desktop\\Python Projects\\ceri_planda\\images\\ceri.png")
+st.image("ceri.png")
 
 # Seçim Kutusu
 option = st.selectbox("Seçenekler", ["Görevler", "Rapor"])
