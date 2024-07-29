@@ -27,6 +27,9 @@ with open(tasks_file, "r") as f:
 if 'tasks' not in st.session_state:
     st.session_state.tasks = tasks
 
+if 'updated' not in st.session_state:
+    st.session_state.updated = False
+
 # Görev Tamamlanmış Olarak İşaretle
 def mark_task_completed(task_id):
     for task in st.session_state.tasks:
@@ -36,7 +39,7 @@ def mark_task_completed(task_id):
                 with open(tasks_file, "w") as f:
                     json.dump(st.session_state.tasks, f)
                 st.session_state.updated = True  # Durumu güncel olarak işaretle
-                return  # İşlemi tamamla
+            break  # İşlemi tamamla
 
 # Görev Sil
 def delete_task(task_id):
@@ -44,10 +47,6 @@ def delete_task(task_id):
     with open(tasks_file, "w") as f:
         json.dump(st.session_state.tasks, f)
     st.session_state.updated = True  # Durumu güncel olarak işaretle
-
-# Sayfa Durumu
-if 'updated' not in st.session_state:
-    st.session_state.updated = False
 
 # Raporu Oluştur
 completed_tasks = [task for task in st.session_state.tasks if task["completed"]]
@@ -114,12 +113,7 @@ else:
 if st.session_state.updated:
     st.session_state.updated = False
 
-completed_tasks = [task for task in st.session_state.tasks if task["completed"]]
-not_completed_tasks = [task for task in st.session_state.tasks if not task["completed"]]
-
-df_completed = pd.DataFrame(completed_tasks)
-df_not_completed = pd.DataFrame(not_completed_tasks)        
-
+# Görevlerin Listelenmesi
 if st.session_state.tasks:
     st.markdown("### Görevler")
     with st.expander("📋 Görev Listesi"):
