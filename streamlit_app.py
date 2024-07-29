@@ -58,14 +58,14 @@ def mark_task_completed(task_id):
     with open(tasks_file, "w") as f:
         json.dump(tasks, f)
     st.balloons()
-    st.experimental_rerun()  # Sayfayı yeniden yükler
+    st.rerun()  # Sayfayı yeniden yükler
 
 def delete_task(task_id):
     global tasks
     tasks = [task for task in tasks if task["id"] != task_id]
     with open(tasks_file, "w") as f:
         json.dump(tasks, f)
-    st.experimental_rerun()  # Sayfayı yeniden yükler
+    st.rerun()  # Sayfayı yeniden yükler
 
 if option == "Rapor":
     st.markdown("<h5 style='text-align: center;'>Görev Durumu</h5>", unsafe_allow_html=True)
@@ -115,7 +115,7 @@ else:
             with open(tasks_file, "w") as f:
                 json.dump(tasks, f)
             
-            st.experimental_rerun()  # Sayfayı yeniden yükler
+            st.rerun()  # Sayfayı yeniden yükler
 
 completed_tasks = [task for task in tasks if task["completed"]]
 not_completed_tasks = [task for task in tasks if not task["completed"]]
