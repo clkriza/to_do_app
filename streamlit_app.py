@@ -45,10 +45,12 @@ def mark_task_completed(task_id):
     global tasks
     for task in tasks:
         if task["id"] == task_id:
-            task["completed"] = True
-    with open(tasks_file, "w") as f:
-        json.dump(tasks, f)
-    st.balloons()
+            if not task["completed"]:  # Sadece tamamlanmamış görevler tamamlanmış olarak işaretlenir
+                task["completed"] = True
+                with open(tasks_file, "w") as f:
+                    json.dump(tasks, f)
+                st.balloons()
+                break  # Güncellemeden sonra döngüden çık
 
 def delete_task(task_id):
     global tasks
@@ -119,7 +121,7 @@ if tasks:
                 with col1:
                     st.markdown(f"<div style='border-radius: 8px; padding: 10px; margin: 5px; background-color: #f8d7da; border-left: 5px solid #dc3545;'>❗{task['task']}<br>{task['description']}<br>{task['date']}</div>", unsafe_allow_html=True)
                 with col2:
-                    if st.button("✅Tamamla", key=task["id"]):
+                    if st.button("✅Tamamla", key=f"complete-{task['id']}"):
                         mark_task_completed(task["id"])
                         
 else:
