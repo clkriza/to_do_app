@@ -24,23 +24,25 @@ if not os.path.exists(tasks_file):
 with open(tasks_file, "r") as f:
     tasks = json.load(f)
 
+if 'tasks' not in st.session_state:
+    st.session_state.tasks = tasks
+
 # Görev Tamamlanmış Olarak İşaretle
 def mark_task_completed(task_id):
-    global tasks
-    for task in tasks:
+    for task in st.session_state.tasks:
         if task["id"] == task_id:
             if not task["completed"]:  # Sadece tamamlanmamış görevler tamamlanmış olarak işaretlenir
                 task["completed"] = True
                 with open(tasks_file, "w") as f:
-                    json.dump(tasks, f)
+                    json.dump(st.session_state.tasks, f)
                 st.session_state.updated = True  # Durumu güncel olarak işaretle
+                return  # İşlemi tamamla
 
 # Görev Sil
 def delete_task(task_id):
-    global tasks
-    tasks = [task for task in tasks if task["id"] != task_id]
+    st.session_state.tasks = [task for task in st.session_state.tasks if task["id"] != task_id]
     with open(tasks_file, "w") as f:
-        json.dump(tasks, f)
+        json.dump(st.session_state.tasks, f)
     st.session_state.updated = True  # Durumu güncel olarak işaretle
 
 # Sayfa Durumu
@@ -48,8 +50,8 @@ if 'updated' not in st.session_state:
     st.session_state.updated = False
 
 # Raporu Oluştur
-completed_tasks = [task for task in tasks if task["completed"]]
-pending_tasks = [task for task in tasks if not task["completed"]]
+completed_tasks = [task for task in st.session_state.tasks if task["completed"]]
+pending_tasks = [task for task in st.session_state.tasks if not task["completed"]]
 
 # Durum container'ları
 durum_container = st.container()
@@ -103,26 +105,25 @@ else:
                 "date": new_date.strftime('%d-%m-%Y'),
                 "completed": False
             }
-            tasks.append(task)
+            st.session_state.tasks.append(task)
             with open(tasks_file, "w") as f:
-                json.dump(tasks, f)
+                json.dump(st.session_state.tasks, f)
             st.success("Görev başarıyla eklendi.")
             st.session_state.updated = True  # Durumu güncel olarak işaretle
 
 if st.session_state.updated:
     st.session_state.updated = False
-    st.experimental_rerun()  # Durum güncellendiğinde sayfayı yenile
 
-completed_tasks = [task for task in tasks if task["completed"]]
-not_completed_tasks = [task for task in tasks if not task["completed"]]
+completed_tasks = [task for task in st.session_state.tasks if task["completed"]]
+not_completed_tasks = [task for task in st.session_state.tasks if not task["completed"]]
 
 df_completed = pd.DataFrame(completed_tasks)
 df_not_completed = pd.DataFrame(not_completed_tasks)        
 
-if tasks:
+if st.session_state.tasks:
     st.markdown("### Görevler")
     with st.expander("📋 Görev Listesi"):
-        for task in tasks:
+        for task in st.session_state.tasks:
             if task["completed"]:
                 st.markdown(f"<div style='border-radius: 8px; padding: 10px; margin: 5px; background-color: #d4edda; border-left: 5px solid #28a745;'><strong>📣{task['task']}</strong> (Tamamlandı)<br>{task['description']}<br>{task['date']}</div>", unsafe_allow_html=True)
                 
