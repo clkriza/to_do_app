@@ -1,16 +1,24 @@
+import asyncio
 import datetime
+import time
+import pandas as pd
+import streamlit as st
 import os
 import json
 import uuid
-import pandas as pd
-import streamlit as st
+import requests
+from streamlit_autorefresh import st_autorefresh
+
 
 # Türkiye Saat Dilimi
-now = datetime.datetime.now(datetime.timezone.utc).astimezone(datetime.timezone(datetime.timedelta(hours=3)))
+turkey_tz = 'Europe/Istanbul'
 
-# Saat ve Tarih
-st.container()
-st.text(f"🕘 {now.strftime('%d-%m-%Y')} / {now.strftime('%H:%M:%S')}")
+saat = st.container(border=True)
+# Günün Tarih ve Saati
+now = datetime.datetime.now(datetime.timezone.utc).astimezone(datetime.timezone(datetime.timedelta(hours=int(time.timezone/3600))))
+
+saat.text(f"🕘 {now.strftime('%d-%m-%Y')} / {now.strftime('%H:%M:%S')}")
+
 
 # Dosya Yolu
 tasks_file = "tasks.json"
@@ -24,40 +32,19 @@ if not os.path.exists(tasks_file):
 with open(tasks_file, "r") as f:
     tasks = json.load(f)
 
-if 'tasks' not in st.session_state:
-    st.session_state.tasks = tasks
-
-if 'updated' not in st.session_state:
-    st.session_state.updated = False
-
-# Görev Tamamlanmış Olarak İşaretle
-def mark_task_completed(task_id):
-    for task in st.session_state.tasks:
-        if task["id"] == task_id:
-            if not task["completed"]:  # Sadece tamamlanmamış görevler tamamlanmış olarak işaretlenir
-                task["completed"] = True
-                with open(tasks_file, "w") as f:
-                    json.dump(st.session_state.tasks, f)
-                st.session_state.updated = True  # Durumu güncel olarak işaretle
-            break  # İşlemi tamamla
-
-# Görev Sil
-def delete_task(task_id):
-    st.session_state.tasks = [task for task in st.session_state.tasks if task["id"] != task_id]
-    with open(tasks_file, "w") as f:
-        json.dump(st.session_state.tasks, f)
-    st.session_state.updated = True  # Durumu güncel olarak işaretle
-
 # Raporu Oluştur
-completed_tasks = [task for task in st.session_state.tasks if task["completed"]]
-pending_tasks = [task for task in st.session_state.tasks if not task["completed"]]
+completed_tasks = [task for task in tasks if task["completed"]]
+pending_tasks = [task for task in tasks if not task["completed"]]
 
 # Durum container'ları
 durum_container = st.container()
+# Görev durumu kontrolü
 if pending_tasks:
-    durum_container.warning(f"🔴 {len(pending_tasks)} kadar tamamlanmamış görevleriniz var.")
+    durum_container.warning(f"🔴 {len(pending_tasks)} kadar tamamlanmamış görevleriniz var. !")
 else:
     durum_container.success("✅ Tamamlanmamış görevleriniz yok.")
+    time.sleep(1)  # 1 saniye bekle
+    durum_container.empty()  # Container'ı temizle      
 
 # Sayfa Başlığı
 st.image("ceri.png")
@@ -65,12 +52,30 @@ st.image("ceri.png")
 # Seçim Kutusu
 option = st.selectbox("Seçenekler", ["Görevler", "Rapor"])
 
+def mark_task_completed(task_id):
+    global tasks
+    for task in tasks:
+        if task["id"] == task_id:
+            task["completed"] = True
+    with open(tasks_file, "w") as f:
+        json.dump(tasks, f)
+    st.balloons()
+    st.experimental_rerun()
+
+def delete_task(task_id):
+    global tasks
+    tasks = [task for task in tasks if task["id"] != task_id]
+    with open(tasks_file, "w") as f:
+        json.dump(tasks, f)
+    st.experimental_rerun()
+
 if option == "Rapor":
     st.markdown("<h5 style='text-align: center;'>Görev Durumu</h5>", unsafe_allow_html=True)
     col1, col2 = st.columns(2)
     col1.markdown(f"<div style='text-align: center; background-color: #d4edda; border-radius: 10px; padding: 5px;'><h11>💪Tamamlanmış Görevler</h11><p style='font-size: 18px;'>{len(completed_tasks)}</p></div>", unsafe_allow_html=True)
     col2.markdown(f"<div style='text-align: center; background-color: #f8d7da; border-radius: 10px; padding: 5px;'><h11>😴Bekleyen Görevler</h11><p style='font-size: 18px;'>{len(pending_tasks)}</p></div><br>", unsafe_allow_html=True)
     
+    # Tamamlanmış Görevler Listesi
     st.markdown("#### ✅ Tamamlanmış Görevler")
     for task in completed_tasks:
         col1, col2 = st.columns([4, 1])
@@ -80,6 +85,8 @@ if option == "Rapor":
             if st.button("Sil", key=f"del-{task['id']}"):
                 delete_task(task["id"])
 
+
+    # Bekleyen Görevler Listesi
     st.markdown("#### 🕘 Bekleyen Görevler")
     for task in pending_tasks:
         col1, col2 = st.columns([4, 1])
@@ -90,6 +97,7 @@ if option == "Rapor":
                 delete_task(task["id"])
 
 else:
+    # Yeni Görev Ekleme
     st.markdown("### Yeni Plan Ekle")
     new_task = st.text_input("Yeni Plan")
     new_description = st.text_input("Açıklama")
@@ -104,20 +112,24 @@ else:
                 "date": new_date.strftime('%d-%m-%Y'),
                 "completed": False
             }
-            st.session_state.tasks.append(task)
+            st.warning("Plan Eklendi.")
+            
+            tasks.append(task)
             with open(tasks_file, "w") as f:
-                json.dump(st.session_state.tasks, f)
-            st.success("Görev başarıyla eklendi.")
-            st.session_state.updated = True  # Durumu güncel olarak işaretle
+                json.dump(tasks, f)
+            
+            st.experimental_rerun()
 
-if st.session_state.updated:
-    st.session_state.updated = False
+completed_tasks = [task for task in tasks if task["completed"]]
+not_completed_tasks = [task for task in tasks if not task["completed"]]
 
-# Görevlerin Listelenmesi
-if st.session_state.tasks:
+df_completed = pd.DataFrame(completed_tasks)
+df_not_completed = pd.DataFrame(not_completed_tasks)        
+
+if tasks:
     st.markdown("### Görevler")
     with st.expander("📋 Görev Listesi"):
-        for task in st.session_state.tasks:
+        for task in tasks:
             if task["completed"]:
                 st.markdown(f"<div style='border-radius: 8px; padding: 10px; margin: 5px; background-color: #d4edda; border-left: 5px solid #28a745;'><strong>📣{task['task']}</strong> (Tamamlandı)<br>{task['description']}<br>{task['date']}</div>", unsafe_allow_html=True)
                 
@@ -126,7 +138,7 @@ if st.session_state.tasks:
                 with col1:
                     st.markdown(f"<div style='border-radius: 8px; padding: 10px; margin: 5px; background-color: #f8d7da; border-left: 5px solid #dc3545;'>❗{task['task']}<br>{task['description']}<br>{task['date']}</div>", unsafe_allow_html=True)
                 with col2:
-                    if st.button("✅Tamamla", key=f"complete-{task['id']}"):
+                    if st.button("✅Tamamla", key=task["id"]):
                         mark_task_completed(task["id"])
                         
 else:
@@ -156,10 +168,12 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-seç = st.container() 
+seç = st.container(border=True) 
 with seç:
+    # Seçim kutusunu oluştur
     seçim = st.selectbox("📚 Bir Hikaye Seç", ["Seçimin;", "🔞 Rıza'nın Hikayesi", "🔪 Ceri'nin Hikayesi"])
 
+    # Seçilen seçenek "🔞 Rıza'nın Hikayesi" ise, iframe'i göster
     if seçim == "🔞 Rıza'nın Hikayesi":
         st.markdown("""<iframe style="border-radius:12px" src="https://open.spotify.com/embed/playlist/4jXGg7QYHA2eGLXqHRYY01?utm_source=generator" width="100%" height="352" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>""", unsafe_allow_html=True)
     elif seçim == "🔪 Ceri'nin Hikayesi":
