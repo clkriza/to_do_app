@@ -7,14 +7,21 @@ import os
 import json
 import uuid
 import requests
+from streamlit_autorefresh import st_autorefresh
+
+
+
+
 
 # Türkiye Saat Dilimi
 turkey_tz = 'Europe/Istanbul'
-now = datetime.datetime.now(datetime.timezone.utc).astimezone(datetime.timezone(datetime.timedelta(hours=3)))
 
-# Saat ve Tarih
 saat = st.container(border=True)
+# Günün Tarih ve Saati
+now = datetime.datetime.now(datetime.timezone.utc).astimezone(datetime.timezone(datetime.timedelta(hours=int(time.timezone/3600))))
+
 saat.text(f"🕘 {now.strftime('%d-%m-%Y')} / {now.strftime('%H:%M:%S')}")
+
 
 # Dosya Yolu
 tasks_file = "tasks.json"
@@ -34,15 +41,16 @@ pending_tasks = [task for task in tasks if not task["completed"]]
 
 # Durum container'ları
 durum_container = st.container()
+# Görev durumu kontrolü
 if pending_tasks:
-    durum_container.warning(f"🔴 {len(pending_tasks)} kadar tamamlanmamış görevleriniz var.")
+    durum_container.warning(f"🔴 {len(pending_tasks)} kadar tamamlanmamış görevleriniz var. !")
 else:
     durum_container.success("✅ Tamamlanmamış görevleriniz yok.")
     time.sleep(1)  # 1 saniye bekle
     durum_container.empty()  # Container'ı temizle      
 
 # Sayfa Başlığı
-st.image("ceri.png")
+st.image("C:\\Users\\rizacelik\\Desktop\\Python Projects\\ceri_planda\\images\\ceri.png")
 
 # Seçim Kutusu
 option = st.selectbox("Seçenekler", ["Görevler", "Rapor"])
@@ -70,6 +78,7 @@ if option == "Rapor":
     col1.markdown(f"<div style='text-align: center; background-color: #d4edda; border-radius: 10px; padding: 5px;'><h11>💪Tamamlanmış Görevler</h11><p style='font-size: 18px;'>{len(completed_tasks)}</p></div>", unsafe_allow_html=True)
     col2.markdown(f"<div style='text-align: center; background-color: #f8d7da; border-radius: 10px; padding: 5px;'><h11>😴Bekleyen Görevler</h11><p style='font-size: 18px;'>{len(pending_tasks)}</p></div><br>", unsafe_allow_html=True)
     
+    # Tamamlanmış Görevler Listesi
     st.markdown("#### ✅ Tamamlanmış Görevler")
     for task in completed_tasks:
         col1, col2 = st.columns([4, 1])
@@ -79,6 +88,8 @@ if option == "Rapor":
             if st.button("Sil", key=f"del-{task['id']}"):
                 delete_task(task["id"])
 
+
+    # Bekleyen Görevler Listesi
     st.markdown("#### 🕘 Bekleyen Görevler")
     for task in pending_tasks:
         col1, col2 = st.columns([4, 1])
@@ -89,6 +100,7 @@ if option == "Rapor":
                 delete_task(task["id"])
 
 else:
+    # Yeni Görev Ekleme
     st.markdown("### Yeni Plan Ekle")
     new_task = st.text_input("Yeni Plan")
     new_description = st.text_input("Açıklama")
@@ -161,8 +173,10 @@ st.markdown(
 
 seç = st.container(border=True) 
 with seç:
+    # Seçim kutusunu oluştur
     seçim = st.selectbox("📚 Bir Hikaye Seç", ["Seçimin;", "🔞 Rıza'nın Hikayesi", "🔪 Ceri'nin Hikayesi"])
 
+    # Seçilen seçenek "🔞 Rıza'nın Hikayesi" ise, iframe'i göster
     if seçim == "🔞 Rıza'nın Hikayesi":
         st.markdown("""<iframe style="border-radius:12px" src="https://open.spotify.com/embed/playlist/4jXGg7QYHA2eGLXqHRYY01?utm_source=generator" width="100%" height="352" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>""", unsafe_allow_html=True)
     elif seçim == "🔪 Ceri'nin Hikayesi":
@@ -170,4 +184,4 @@ with seç:
     elif seçim == "Seçimin;":
         st.info("🐣 Çalışırken biraz rahatlamak istersen hikayelerden birini seçmelisin.")
     else:
-        st.warning("Beni delirteceksin.") 
+        st.warning("Beni delirteceksin.")
